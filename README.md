@@ -13,7 +13,7 @@ This  implementation supports dynamic handling of multiple financial instruments
 1. **Clone the repository:**
 
    ```sh
-   git clone <repository-url>
+   git clone https://github.com/khachatur/FinancialPriceService.git
    cd FinancialPriceService
    ```
 

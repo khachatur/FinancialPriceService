@@ -1,0 +1,54 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+  <title>Price Updates</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.11/signalr.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+
+    #prices {
+      list-style-type: none;
+      padding: 0;
+    }
+
+      #prices li {
+        margin: 5px 0;
+        padding: 10px;
+        background: #f0f0f0;
+        border-radius: 5px;
+      }
+  </style>
+</head>
+<body>
+  <div>
+    <h1>Real-Time Price Updates</h1>
+    <ul id="prices"></ul>
+  </div>
+  <script type="text/javascript">
+    const connection = new signalR.HubConnectionBuilder()
+      .withUrl("/priceHub")
+      .build();
+
+    const pricesList = document.getElementById("prices");
+    const priceElements = {};
+
+    connection.on("ReceivePriceUpdate", (instrument, price) => {
+      if (!priceElements[instrument]) {
+        const listItem = document.createElement("li");
+        listItem.id = `price-${instrument}`;
+        listItem.textContent = `${instrument}: ${price}`;
+        pricesList.appendChild(listItem);
+        priceElements[instrument] = listItem;
+      } else {
+        priceElements[instrument].textContent = `${instrument}: ${price}`;
+      }
+    });
+
+    connection.start().then(() => {
+      console.log("Connected to SignalR hub");
+    }).catch(err => console.error(err.toString()));
+  </script>
+</body>
+</html>

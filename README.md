@@ -34,6 +34,9 @@ This  implementation supports dynamic handling of multiple financial instruments
    ```sh
    dotnet run
    ```
+5. **Open the sample client:**
+
+   Open `wwwroot/index.html` in a web browser to see real-time price updates.
 
 ## Endpoints
 
@@ -69,7 +72,7 @@ This  implementation supports dynamic handling of multiple financial instruments
 ## WebSocket
 - **Subscribe to Live Price Updates:**
 
-Connect to `ws://localhost:5000/ws` using a WebSocket client to receive live updates for BTCUSD from Binance.
+Connect to `ws://localhost:5273/ws` using a WebSocket client to receive live updates for BTCUSD from Binance.
 
 ## Project Structure
 - **Program.cs:** Main entry point of the application, configures services, and sets up endpoints.
@@ -77,7 +80,8 @@ Connect to `ws://localhost:5000/ws` using a WebSocket client to receive live upd
 - **PriceStore.cs:** Stores and updates the latest prices.
 - **Controllers/PricesController.cs:** Handles REST API requests for financial instrument prices.
 - **Services/BinanceWebSocketService.cs:** Background service that connects to Binance WebSocket and updates prices.
-
+- **Hubs/PriceHub.cs:** Defines the SignalR hub that clients can connect to for receiving real-time updates.
+- **wwwroot/:** Contains static files for the project, including a sample client (index.html) to test SignalR connections.
 ## Logging
 The application logs important events and errors to the console. Ensure you check the console output for real-time logging information.
 

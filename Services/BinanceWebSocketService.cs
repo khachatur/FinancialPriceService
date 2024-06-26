@@ -1,4 +1,6 @@
-﻿using System.Net.WebSockets;
+﻿using FinancialPriceService.Hubs;
+using Microsoft.AspNetCore.SignalR;
+using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
 
@@ -6,7 +8,7 @@ namespace FinancialPriceService.Services
 {
 	public class BinanceWebSocketService : BackgroundService
 	{
-		private readonly WebSocketConnectionManager _connectionManager;
+		private readonly IHubContext<PriceHub> _hubContext;
 		private readonly PriceStore _priceStore;
 		private readonly ILogger<BinanceWebSocketService> _logger;
 		private readonly string[] _instruments = new[] { "btcusdt@aggTrade", "ethusdt@aggTrade", "eurusdt@aggTrade" }; // Add more instruments as needed
@@ -14,12 +16,12 @@ namespace FinancialPriceService.Services
 		/// <summary>
 		/// Initializes a new instance of the <see cref="BinanceWebSocketService"/> class.
 		/// </summary>
-		/// <param name="connectionManager">The WebSocket connection manager to manage connections.</param>
+		/// <param name="hubContext">The hub context for the SignalR PriceHub.</param>
 		/// <param name="priceStore">The price store to store and retrieve prices.</param>
-		/// <param name="logger">The logger to log information and errors.</param>
-		public BinanceWebSocketService(WebSocketConnectionManager connectionManager, PriceStore priceStore, ILogger<BinanceWebSocketService> logger)
+		/// <param name="logger">The logger for logging messages.</param>
+		public BinanceWebSocketService(IHubContext<PriceHub> hubContext, PriceStore priceStore, ILogger<BinanceWebSocketService> logger)
 		{
-			_connectionManager = connectionManager;
+			_hubContext = hubContext;
 			_priceStore = priceStore;
 			_logger = logger;
 		}
@@ -93,7 +95,7 @@ namespace FinancialPriceService.Services
 						// Try to parse the price as a decimal
 						if (!string.IsNullOrEmpty(symbol) && !string.IsNullOrEmpty(priceString) && decimal.TryParse(priceString, out var price))
 						{
-							// Map the Binance symbol to our API instrument
+							// Mapping Binance symbols to our API instruments
 							var instrument = symbol switch
 							{
 								"BTCUSDT" => "BTCUSD",
@@ -102,16 +104,14 @@ namespace FinancialPriceService.Services
 								_ => null
 							};
 
-							// If the instrument is valid, update the price in the price store
+							// If the instrument is valid, update the price in the price store and send the updated price to all clients
 							if (instrument != null)
 							{
 								_priceStore.UpdatePrice(instrument, price);
+								await _hubContext.Clients.All.SendAsync("ReceivePriceUpdate", instrument, price);
 							}
 						}
 					}
-
-					// Broadcast the received message to all connected clients
-					await _connectionManager.BroadcastMessage(messageReceived);
 				}
 			}
 		}
